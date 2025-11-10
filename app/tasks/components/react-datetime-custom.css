@@ -1,0 +1,25 @@
+.rdtPicker td.rdtActive,
+.rdtPicker td.rdtActive:hover,
+.rdtPicker td.rdtActive.rdtToday,
+.rdtPicker td.rdtActive.rdtToday:hover {
+  background-color: oklch(0.5294 0.2491 289) !important;
+  color: oklch(0.985 0 0) !important;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.rdtPicker td.rdtActive.rdtToday:before {
+  border-bottom-color: oklch(0.985 0 0) !important;
+}
+
+.dark .rdtPicker td.rdtActive,
+.dark .rdtPicker td.rdtActive:hover,
+.dark .rdtPicker td.rdtActive.rdtToday,
+.dark .rdtPicker td.rdtActive.rdtToday:hover {
+  background-color: oklch(0.488 0.243 264.376) !important;
+  color: oklch(0.985 0 0) !important;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.dark .rdtPicker td.rdtActive.rdtToday:before {
+  border-bottom-color: oklch(0.985 0 0) !important;
+}
