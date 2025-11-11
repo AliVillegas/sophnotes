@@ -5,6 +5,7 @@ import TasksBoard from './components/TasksBoard';
 import { useTaskStore } from '../stores/task-store';
 import { Spinner } from '@/components/ui/spinner';
 import Header from '@/components/Header';
+import { useToast } from '@/hooks/use-toast';
 
 const LoadingSpinner = () => {
   return (
@@ -16,10 +17,25 @@ const LoadingSpinner = () => {
 
 export default function Tasks() {
   const { fetchTasks, tasks } = useTaskStore();
+  const { toast } = useToast();
 
   useEffect(() => {
-    fetchTasks();
-  }, []);
+    const loadTasks = async () => {
+      try {
+        await fetchTasks();
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'Failed to load tasks. Please refresh the page.',
+          variant: 'destructive',
+        });
+      }
+    };
+    loadTasks();
+  }, [fetchTasks, toast]);
 
   return (
     <>

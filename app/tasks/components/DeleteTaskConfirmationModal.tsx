@@ -2,6 +2,7 @@
 import { Task, useTaskStore } from '@/app/stores/task-store';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 
 interface DeleteModalProps {
   task: Task;
@@ -12,10 +13,25 @@ export default function DeleteTaskConfirmationModal({
   onCancel,
 }: DeleteModalProps) {
   const { deleteTask, fetchTasks } = useTaskStore();
+  const { toast } = useToast();
 
   const deleteChosenTask = async (id: string) => {
-    await deleteTask(id);
-    await fetchTasks();
+    try {
+      await deleteTask(id);
+      await fetchTasks();
+      toast({
+        title: 'Task deleted',
+        description: 'Your task has been successfully deleted.',
+      });
+      onCancel();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'Failed to delete task',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (

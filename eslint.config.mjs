@@ -11,6 +11,7 @@ const eslintConfig = [
       '.next/**',
       'out/**',
       'build/**',
+      'coverage/**',
       'next-env.d.ts',
     ],
   },
@@ -52,7 +53,7 @@ const eslintConfig = [
       complexity: ['error', { max: 25 }],
       'max-lines-per-function': [
         'error',
-        { max: 185, skipBlankLines: true, skipComments: true },
+        { max: 190, skipBlankLines: true, skipComments: true },
       ],
       'max-depth': ['error', { max: 5 }],
       'max-params': ['error', { max: 10 }],

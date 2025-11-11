@@ -14,12 +14,14 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tooltip } from '@/components/ui/tooltip';
 import EditTaskModal from './EditTaskModal';
+import { useToast } from '@/hooks/use-toast';
 
 interface TaskCardProps {
   task: Task;
 }
 export default function TaskCard({ task }: TaskCardProps) {
   const { deleteTask, completeTask, fetchTasks } = useTaskStore();
+  const { toast } = useToast();
   const [showDeleteConfirmationModal, setShowDeleteConfirmationModal] =
     useState<boolean>(false);
 
@@ -30,8 +32,34 @@ export default function TaskCard({ task }: TaskCardProps) {
     if (task.status === 'pending') {
       setShowDeleteConfirmationModal(true);
     } else {
-      deleteTask(task.id);
-      fetchTasks();
+      try {
+        await deleteTask(task.id);
+        await fetchTasks();
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description:
+            error instanceof Error ? error.message : 'Failed to delete task',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  const handleCompleteTask = async () => {
+    try {
+      await completeTask(task.id);
+      toast({
+        title: 'Task completed',
+        description: 'Your task has been successfully completed.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'Failed to complete task',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -100,9 +128,7 @@ export default function TaskCard({ task }: TaskCardProps) {
               size="sm"
               aria-label="Complete task"
               className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950"
-              onClick={() => {
-                completeTask(task.id);
-              }}
+              onClick={handleCompleteTask}
             >
               <Check className="size-4 mr-2" />
               Complete

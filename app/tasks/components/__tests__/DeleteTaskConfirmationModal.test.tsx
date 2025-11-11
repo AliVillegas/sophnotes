@@ -3,14 +3,18 @@ import userEvent from '@testing-library/user-event';
 import DeleteTaskConfirmationModal from '../DeleteTaskConfirmationModal';
 import { useTaskStore } from '@/app/stores/task-store';
 import { Task } from '@/app/stores/task-store';
+import { useToast } from '@/hooks/use-toast';
 
 jest.mock('@/app/stores/task-store');
+jest.mock('@/hooks/use-toast');
 
 const mockDeleteTask = jest.fn();
 const mockFetchTasks = jest.fn();
 const mockUseTaskStore = useTaskStore as jest.MockedFunction<
   typeof useTaskStore
 >;
+const mockUseToast = useToast as jest.MockedFunction<typeof useToast>;
+const mockToast = jest.fn();
 
 const mockTask: Task = {
   id: '123e4567-e89b-12d3-a456-426614174000',
@@ -27,6 +31,9 @@ describe('DeleteTaskConfirmationModal Component', () => {
     mockUseTaskStore.mockReturnValue({
       deleteTask: mockDeleteTask,
       fetchTasks: mockFetchTasks,
+    } as any);
+    mockUseToast.mockReturnValue({
+      toast: mockToast,
     } as any);
   });
 
@@ -90,5 +97,93 @@ describe('DeleteTaskConfirmationModal Component', () => {
     await user.click(cancelButton);
 
     expect(mockOnCancel).toHaveBeenCalled();
+  });
+
+  it('shows success toast and calls onCancel when delete succeeds', async () => {
+    const user = userEvent.setup();
+    mockDeleteTask.mockResolvedValue(undefined);
+    mockFetchTasks.mockResolvedValue(undefined);
+
+    render(
+      <DeleteTaskConfirmationModal task={mockTask} onCancel={mockOnCancel} />
+    );
+
+    const confirmButton = screen.getByLabelText('Confirm Delete');
+    await user.click(confirmButton);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith({
+        title: 'Task deleted',
+        description: 'Your task has been successfully deleted.',
+      });
+      expect(mockOnCancel).toHaveBeenCalled();
+    });
+  });
+
+  it('shows error toast when deleteTask fails', async () => {
+    const user = userEvent.setup();
+    const error = new Error('Failed to delete task');
+    mockDeleteTask.mockRejectedValue(error);
+    mockFetchTasks.mockResolvedValue(undefined);
+
+    render(
+      <DeleteTaskConfirmationModal task={mockTask} onCancel={mockOnCancel} />
+    );
+
+    const confirmButton = screen.getByLabelText('Confirm Delete');
+    await user.click(confirmButton);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith({
+        title: 'Error',
+        description: 'Failed to delete task',
+        variant: 'destructive',
+      });
+      expect(mockOnCancel).not.toHaveBeenCalled();
+    });
+  });
+
+  it('shows error toast when fetchTasks fails', async () => {
+    const user = userEvent.setup();
+    const error = new Error('Failed to fetch tasks');
+    mockDeleteTask.mockResolvedValue(undefined);
+    mockFetchTasks.mockRejectedValue(error);
+
+    render(
+      <DeleteTaskConfirmationModal task={mockTask} onCancel={mockOnCancel} />
+    );
+
+    const confirmButton = screen.getByLabelText('Confirm Delete');
+    await user.click(confirmButton);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith({
+        title: 'Error',
+        description: 'Failed to fetch tasks',
+        variant: 'destructive',
+      });
+      expect(mockOnCancel).not.toHaveBeenCalled();
+    });
+  });
+
+  it('handles non-Error exceptions', async () => {
+    const user = userEvent.setup();
+    mockDeleteTask.mockRejectedValue('String error');
+    mockFetchTasks.mockResolvedValue(undefined);
+
+    render(
+      <DeleteTaskConfirmationModal task={mockTask} onCancel={mockOnCancel} />
+    );
+
+    const confirmButton = screen.getByLabelText('Confirm Delete');
+    await user.click(confirmButton);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith({
+        title: 'Error',
+        description: 'Failed to delete task',
+        variant: 'destructive',
+      });
+    });
   });
 });

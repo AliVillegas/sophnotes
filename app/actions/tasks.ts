@@ -3,43 +3,80 @@
 import { supabaseServer } from '@/lib/supabase-server';
 import type { Task } from '@/app/stores/task-store';
 
+function handleSupabaseError(error: unknown, defaultMessage: string): never {
+  if (error && typeof error === 'object' && 'message' in error) {
+    const message = String(error.message);
+    if (message.includes('network') || message.includes('fetch')) {
+      throw new Error(
+        'Network error. Please check your connection and try again.'
+      );
+    }
+    if (message.includes('timeout')) {
+      throw new Error('Request timed out. Please try again.');
+    }
+    throw new Error(message);
+  }
+  throw new Error(defaultMessage);
+}
+
 export async function addTaskAction(task: Omit<Task, 'id'>): Promise<Task> {
-  const { data, error } = await supabaseServer
-    .from('tasks')
-    .insert([task])
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabaseServer
+      .from('tasks')
+      .insert([task])
+      .select()
+      .single();
 
-  if (error) {
-    throw new Error(error.message);
+    if (error) {
+      handleSupabaseError(error, 'Failed to create task');
+    }
+
+    if (!data) {
+      throw new Error('Failed to create task');
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    handleSupabaseError(error, 'Failed to create task');
   }
-
-  if (!data) {
-    throw new Error('Failed to create task');
-  }
-
-  return data;
 }
 
 export async function fetchTasksAction(): Promise<Task[]> {
-  const { data: tasks, error } = await supabaseServer
-    .from('tasks')
-    .select('*')
-    .order('status', { ascending: false })
-    .order('created_at', { ascending: false });
+  try {
+    const { data: tasks, error } = await supabaseServer
+      .from('tasks')
+      .select('*')
+      .order('status', { ascending: false })
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    throw new Error(error.message);
+    if (error) {
+      handleSupabaseError(error, 'Failed to fetch tasks');
+    }
+
+    return tasks || [];
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    handleSupabaseError(error, 'Failed to fetch tasks');
   }
-
-  return tasks || [];
 }
 
 export async function deleteTaskAction(id: string): Promise<void> {
-  const { error } = await supabaseServer.from('tasks').delete().eq('id', id);
+  try {
+    const { error } = await supabaseServer.from('tasks').delete().eq('id', id);
 
-  if (error) {
-    throw new Error(error.message);
+    if (error) {
+      handleSupabaseError(error, 'Failed to delete task');
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    handleSupabaseError(error, 'Failed to delete task');
   }
 }
 
@@ -47,39 +84,53 @@ export async function updateTaskAction(
   id: string,
   updates: Partial<Task>
 ): Promise<Task> {
-  const { data, error } = await supabaseServer
-    .from('tasks')
-    .update({ ...updates })
-    .eq('id', id)
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabaseServer
+      .from('tasks')
+      .update({ ...updates })
+      .eq('id', id)
+      .select()
+      .single();
 
-  if (error) {
-    throw new Error(error.message);
+    if (error) {
+      handleSupabaseError(error, 'Failed to update task');
+    }
+
+    if (!data) {
+      throw new Error('Failed to update task');
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    handleSupabaseError(error, 'Failed to update task');
   }
-
-  if (!data) {
-    throw new Error('Failed to update task');
-  }
-
-  return data;
 }
 
 export async function completeTaskAction(id: string): Promise<Task> {
-  const { data, error } = await supabaseServer
-    .from('tasks')
-    .update({ status: 'completed' })
-    .eq('id', id)
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabaseServer
+      .from('tasks')
+      .update({ status: 'completed' })
+      .eq('id', id)
+      .select()
+      .single();
 
-  if (error) {
-    throw new Error(error.message);
+    if (error) {
+      handleSupabaseError(error, 'Failed to complete task');
+    }
+
+    if (!data) {
+      throw new Error('Failed to complete task');
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    handleSupabaseError(error, 'Failed to complete task');
   }
-
-  if (!data) {
-    throw new Error('Failed to complete task');
-  }
-
-  return data;
 }
